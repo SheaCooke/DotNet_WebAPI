@@ -43,7 +43,10 @@ namespace Catalog
             //change from using list to store everything to mongo db. 
             services.AddSingleton<IItemsRepository, /*InMenuItemsRepository*/MongoDbItemsRepository>(); // singleton, 1 copy of an instance of a type accross the entire lifetime of our service. will be reused  
 
-            services.AddControllers();
+            services.AddControllers(options =>
+            {
+                options.SuppressAsyncSuffixInActionNames = false;
+            });
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Catalog", Version = "v1" });

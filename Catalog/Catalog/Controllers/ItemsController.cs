@@ -22,18 +22,18 @@ namespace Catalog.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<ItemDto> GetItems()
+        public async Task<IEnumerable<ItemDto>> GetItemsAsync()
         {
-            var items = repository.GetItems().Select(item => item.AsDto());
+            var items = (await repository.GetItemsAsync()).Select(item => item.AsDto());
 
             return items;
         }
 
         //GET/items/id
         [HttpGet("{Id}")] //The path parameter must match the controller parameter exactly!!!
-        public ActionResult<ItemDto> GetItem(Guid Id) //ActionResult allows us to return different data types  
+        public async Task<ActionResult<ItemDto>> GetItemAsync(Guid Id) //ActionResult allows us to return different data types  
         {
-            var item = repository.GetItem(Id);
+            var item = await repository.GetItemAsync(Id);
 
             if (item is null) //code 204
             {
@@ -49,7 +49,7 @@ namespace Catalog.Controllers
         /// <param name="itemDto"></param>
         /// <returns></returns>
         [HttpPost]
-        public ActionResult<ItemDto> CreateItem(CreateItemDto itemDto) //create the item, and then return the item you created
+        public async Task<ActionResult<ItemDto>> CreateItemAsync(CreateItemDto itemDto) //create the item, and then return the item you created
         {
             Item item = new()
             {
@@ -59,17 +59,18 @@ namespace Catalog.Controllers
                 CreatedDate = DateTimeOffset.Now
             };
 
-            repository.CreateItem(item);
+            await repository.CreateItemAsync(item);
              
-            return CreatedAtAction(nameof(GetItem), new { id = item.Id }, item.AsDto()); //can also use crate at route. 
+            return CreatedAtAction(nameof(GetItemAsync), new { id = item.Id }, item.AsDto()); //can also use crate at route. 
             //get name of item passed to the GET action method, create a new item with the same id 
+            //The Async suffix is removed at run time, so this ^^^ will end up looking for a controller called GetItem, when the correct one is called GetItemAsync. Can tell ASP.NET to ignore this: startup line 48
         }
            // The convention for a put (update to db) is to not return anything 
            // PUT /items/{id}
            [HttpPut("{id}")]
-        public ActionResult UpdateItem(Guid id, UpdateItemDto itemDto)
+        public async Task<ActionResult> UpdateItemAsync(Guid id, UpdateItemDto itemDto)
         {
-            var existingItem = repository.GetItem(id);
+            var existingItem = await repository .GetItemAsync(id);
 
             if (existingItem == null)
             {
@@ -81,7 +82,7 @@ namespace Catalog.Controllers
                 Name = itemDto.Name,
                 Price = itemDto.Price
             };
-            repository.UpdateItem(updatedItem); // Because the id stayed the same, this changes the origonal to the copy we just created 
+            await repository.UpdateItemAsync(updatedItem); // Because the id stayed the same, this changes the origonal to the copy we just created 
 
             return NoContent();
         }
@@ -90,16 +91,16 @@ namespace Catalog.Controllers
         //Just like with PUT (update) requests, the convention is to not return any content with deletes 
         //DELETE/items/{id}
         [HttpDelete("{id}")]
-        public ActionResult DeleteItem(Guid id)
+        public async Task<ActionResult> DeleteItem(Guid id)
         {
-            var existingItem = repository.GetItem(id);
+            var existingItem = await repository .GetItemAsync(id);
 
             if (existingItem == null)
             {
                 return NotFound();
             }
 
-            repository.DeleteItem(id);
+            await repository.DeleteItemAsync(id);
 
             return NoContent();
         }

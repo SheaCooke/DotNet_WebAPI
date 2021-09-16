@@ -1,18 +1,19 @@
 ﻿using Catalog.Entities;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Catalog.Repositories
 {
     public interface IItemsRepository
     {
-        Item GetItem(Guid id);
-        IEnumerable<Item> GetItems();
+        Task<Item> GetItemAsync(Guid id); //Task: task of item, not syncronous, you will not get the item right away, you will get a task that will eventually return an item. Turns method into Async method 
+        Task<IEnumerable<Item>> GetItemsAsync();
 
-        void CreateItem(Item item); //only receives an item 
+        Task CreateItemAsync(Item item); //only receives an item 
 
-        void UpdateItem(Item item);
+        Task UpdateItemAsync(Item item);
 
-        void DeleteItem(Guid id);
+        Task DeleteItemAsync(Guid id); // void -> Task for Async 
     }
 }

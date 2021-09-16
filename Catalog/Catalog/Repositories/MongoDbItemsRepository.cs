@@ -25,34 +25,35 @@ namespace Catalog.Repositories
         //docker normaly listens on port 27017. normal location for data inside container is /data/db
         
 
-        public void CreateItem(Item item)
+        public async Task CreateItemAsync(Item item)
         {
-            itemsCollection.InsertOne(item);
+            await itemsCollection.InsertOneAsync(item); //MongoDb has built in Async methods 
         }
 
-        public void DeleteItem(Guid id)
+        //async allows us to avoid blocking processes every time we interact w/ db. Allow the framework to continue doing work while we wait for the db to complete its actions 
+        public async Task DeleteItemAsync(Guid id)
         {
             var filter = filterBuilder.Eq(item => item.Id, id);//first, build filter
-            itemsCollection.DeleteOne(filter);
+            await itemsCollection.DeleteOneAsync(filter);
         }
 
-        public Item GetItem(Guid id)
+        public async Task<Item> GetItemAsync(Guid id)
         {
             var filter = filterBuilder.Eq(item => item.Id, id);//first, build filter
-            return itemsCollection.Find(filter).SingleOrDefault(); 
+            return await itemsCollection.Find(filter).SingleOrDefaultAsync(); 
 
             
         }
 
-        public IEnumerable<Item> GetItems()
+        public async Task<IEnumerable<Item>> GetItemsAsync()
         {
-            return itemsCollection.Find(new BsonDocument()).ToList();
+            return await itemsCollection.Find(new BsonDocument()).ToListAsync();
         }
 
-        public void UpdateItem(Item item)
+        public async Task UpdateItemAsync(Item item)
         {
             var filter = filterBuilder.Eq(existingItem => existingItem.Id, item.Id); //first, build filter
-            itemsCollection.ReplaceOne(filter, item);
+            await itemsCollection.ReplaceOneAsync(filter, item);
         }
     }
 }
