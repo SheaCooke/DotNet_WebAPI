@@ -1,4 +1,5 @@
 using Catalog.Repositories;
+using Catalog.settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -8,6 +9,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
+using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +32,16 @@ namespace Catalog
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<IItemsRepository, InMenuItemsRepository>(); // singleton, 1 copy of an instance of a type accross the entire lifetime of our service. will be reused  
+            BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));//anytime a Guid is seen, serialize it as a string
+            BsonSerializer.RegisterSerializer(new DateTimeOffsetSerializer(BsonType.String)); // same w/ datatimes
+            services.AddSingleton<IMongoClient>(ServiceProvider =>
+            {//grab instance of settings via mongodbsettings class
+                var settings = Configuration.GetSection(nameof(MongoDbSettings)).Get<MongoDbSettings>(); //gets us the section
+                return new MongoClient(settings.ConnectionString); //the connection string from the MongoDbSettings class namespace 
+            });
+
+            //change from using list to store everything to mongo db. 
+            services.AddSingleton<IItemsRepository, /*InMenuItemsRepository*/MongoDbItemsRepository>(); // singleton, 1 copy of an instance of a type accross the entire lifetime of our service. will be reused  
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
