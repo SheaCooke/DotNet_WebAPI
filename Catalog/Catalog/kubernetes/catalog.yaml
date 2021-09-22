@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-deployment
+spec:
+  selector:
+    matchLabels:
+      app: catalog #all pods that have a lable of catalog-deployment will be handled by this deployment 
+  template:
+    metadata:
+      labels:
+        app: catalog
+    spec:
+      containers:
+      - name: catalog
+        image: sheacooke/catalog:v1
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m" #about half of the CPU 
+        ports:
+        - containerPort: 80 #port inside container where we can find the REST API
+        env:
+        - name: MongoDbSettings__Host #__ go into hierarchy 
+          value: mongodb-service
+        - name: MongoDbSettings__Password
+          valueFrom:
+            secretKeyRef:
+              name: catalog-secrets
+              key: mongodb-password
+      livenessProbe:
+        httpGet:
+          path: /health/live #is the REST API alive?
+          port: 80
+      readinessProbe:
+        httpGet:
+          path: /health/ready #is the REST API ready to be used?
+          port: 80
+           
